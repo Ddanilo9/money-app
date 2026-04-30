@@ -1,22 +1,23 @@
-export type ExpenseType = 'shared' | 'personal'
+export type ExpenseType = 'shared' | 'personal';
 
 export interface Expense {
-  id: number
-  name: string
-  amount: number
-  category: string
-  type: ExpenseType
-  paidBy: string
+  id: number;
+  name: string;
+  amount: number;
+  category: string;
+  type: ExpenseType;
+  paidBy: string;
+  created_at?: string;
 }
 
 export interface CategoryGroup {
-  category: string
-  expenses: Expense[]
-  total: number
+  category: string;
+  expenses: Expense[];
+  total: number;
 }
 
 export interface UserReport {
-  user: string
-  groups: CategoryGroup[]
-  total: number
+  user: string;
+  groups: CategoryGroup[];
+  total: number;
 }

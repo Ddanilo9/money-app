@@ -26,7 +26,7 @@
     <q-btn
       label="Genera PDF"
       icon="picture_as_pdf"
-      color="negative"
+      color="teal-7"
       unelevated
       rounded
       class="full-width q-mt-md pdf-btn"
@@ -75,7 +75,7 @@
             </div>
 
             <q-badge
-              :color="e.type === 'shared' ? 'primary' : 'grey-5'"
+              :color="e.type === 'shared' ? 'primary' : 'blue-grey-4'"
               text-color="white"
               rounded
               class="badge"

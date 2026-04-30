@@ -8,54 +8,64 @@
     </div>
 
     <!-- LISTA -->
-    <div v-else class="col q-pa-sm scroll">
+    <div v-else class="col q-pa-md scroll">
 
-      <q-list>
+      <template v-for="group in groupedExpenses" :key="group.key">
 
-        <q-slide-item
-          v-for="exp in myExpenses"
-          :key="exp.id"
-          @right="onEdit($event, exp)"
-        >
-          <q-item class="expense-card">
+        <div :class="['month-divider', $q.dark.isActive ? 'text-grey-4' : 'text-grey-6']">
+          {{ group.label }}
+        </div>
 
-            <q-item-section>
-              <q-item-label class="text-weight-medium">
-                {{ exp.name }}
-              </q-item-label>
+        <q-list>
 
-              <q-item-label caption class="text-grey-6">
-                {{ exp.category }}
-              </q-item-label>
-            </q-item-section>
+          <q-slide-item
+            v-for="exp in group.expenses"
+            :key="exp.id"
+            class="slide-item"
+            right-color="primary"
+            @right="onEdit($event, exp)"
+          >
+            <q-item :class="['expense-card', 'q-pa-md', $q.dark.isActive ? 'bg-grey-9' : 'bg-white']">
 
-            <q-item-section side>
-              <div class="text-weight-bold text-subtitle1">
-                €{{ exp.amount }}
+              <q-item-section>
+                <q-item-label :class="['text-weight-medium', $q.dark.isActive ? 'text-white' : 'text-dark']">
+                  {{ exp.name }}
+                </q-item-label>
+
+                <q-item-label caption :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-6'">
+                  {{ exp.category }}
+                </q-item-label>
+              </q-item-section>
+
+              <q-item-section side>
+                <div :class="['text-weight-bold text-subtitle1', $q.dark.isActive ? 'text-white' : 'text-dark']">
+                  €{{ exp.amount }}
+                </div>
+              </q-item-section>
+
+              <q-item-section side>
+                <q-badge
+                  :color="exp.type === 'shared' ? 'primary' : 'blue-grey-4'"
+                  text-color="white"
+                  rounded
+                >
+                  {{ exp.type === 'shared' ? 'C' : 'P' }}
+                </q-badge>
+              </q-item-section>
+
+            </q-item>
+
+            <template v-slot:right>
+              <div class="row items-center bg-primary text-white q-px-md">
+                Modifica
               </div>
-            </q-item-section>
+            </template>
 
-            <q-item-section side>
-              <q-badge
-                :color="exp.type === 'shared' ? 'primary' : 'grey-5'"
-                text-color="white"
-                rounded
-              >
-                {{ exp.type === 'shared' ? 'C' : 'P' }}
-              </q-badge>
-            </q-item-section>
+          </q-slide-item>
 
-          </q-item>
+        </q-list>
 
-          <template v-slot:right>
-            <div class="row items-center bg-primary text-white q-px-md">
-              Modifica
-            </div>
-          </template>
-
-        </q-slide-item>
-
-      </q-list>
+      </template>
 
       <div v-if="myExpenses.length === 0" class="text-grey text-center q-mt-md">
         Nessuna spesa
@@ -64,7 +74,7 @@
     </div>
 
     <!-- INPUT -->
-    <div class="q-pa-sm bg-white border-top">
+    <div :class="['q-pa-sm border-top', $q.dark.isActive ? 'bg-dark' : 'bg-white']">
 
       <!-- RIGA 1 -->
       <div class="row q-col-gutter-sm q-mb-sm">
@@ -130,7 +140,7 @@
     </div>
 
     <!-- EDIT -->
-    <q-dialog v-model="editDialog">
+    <q-dialog v-model="editDialog" @hide="pendingReset && pendingReset()">
       <q-card class="q-pa-md" style="min-width: 300px">
 
         <div class="text-h6">Modifica Spesa</div>
@@ -201,8 +211,37 @@ onMounted(async () => {
 
 // FILTRO
 const myExpenses = computed(() =>
-  store.expenses.filter(e => e.paidBy === currentUser.value)
+  store.expenses
+    .filter(e => e.paidBy === currentUser.value)
+    .slice(0, 50)
 )
+
+const MONTHS_IT = [
+  'Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno',
+  'Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'
+]
+
+type MonthGroup = { key: string; label: string; expenses: Expense[] }
+
+const groupedExpenses = computed<MonthGroup[]>(() => {
+  const groups: MonthGroup[] = []
+  const map = new Map<string, MonthGroup>()
+
+  for (const exp of myExpenses.value) {
+    const d = exp.created_at ? new Date(exp.created_at) : new Date()
+    const key = `${d.getFullYear()}-${d.getMonth()}`
+    const label = `${MONTHS_IT[d.getMonth()]} ${d.getFullYear()}`
+
+    if (!map.has(key)) {
+      const group: MonthGroup = { key, label, expenses: [] }
+      map.set(key, group)
+      groups.push(group)
+    }
+    map.get(key)!.expenses.push(exp)
+  }
+
+  return groups
+})
 
 // STATE
 const name = ref('')
@@ -279,9 +318,11 @@ async function addExpense() {
 // =====================
 // EDIT OPEN
 // =====================
+const pendingReset = ref<(() => void) | null>(null)
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function onEdit({ reset }: any, exp: Expense) {
-  reset()
+  pendingReset.value = reset
 
   selectedExpense.value = exp
   editName.value = exp.name
@@ -338,6 +379,18 @@ async function saveEdit() {
   z-index: 10;
 }
 
+.month-divider {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 16px 4px 6px;
+}
+
+:global(body.body--dark) .border-top {
+  border-top-color: #444;
+}
+
 .loader-container {
   position: absolute;
   top: 40%;
@@ -346,11 +399,14 @@ async function saveEdit() {
   text-align: center;
 }
 
-.expense-card {
-  background: white;
+.slide-item {
   border-radius: 12px;
-  margin-bottom: 8px;
-  padding: 6px 0;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.expense-card {
+  border-radius: 12px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.05);
 }
 
