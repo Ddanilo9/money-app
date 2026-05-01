@@ -6,6 +6,15 @@
       Bilancio
     </div>
 
+    <!-- SELETTORE MESE -->
+    <div class="row items-center justify-between q-mb-md">
+      <q-btn flat round dense icon="chevron_left" @click="prevMonth" />
+      <div class="text-subtitle1 text-weight-medium text-capitalize">
+        {{ monthLabel }}
+      </div>
+      <q-btn flat round dense icon="chevron_right" @click="nextMonth" :disable="isCurrentMonth" />
+    </div>
+
     <!-- CARD BILANCIO -->
     <q-card class="balance-card">
 
@@ -113,6 +122,45 @@ import { buildUserReport } from 'src/utils/pdfHelpers'
 const currentUser = ref('')
 const store = useExpensesStore()
 
+// Mese selezionato (primo giorno del mese)
+const selectedMonth = ref(new Date(new Date().getFullYear(), new Date().getMonth(), 1))
+
+const monthLabel = computed(() =>
+  selectedMonth.value.toLocaleString('it-IT', { month: 'long', year: 'numeric' })
+)
+
+const isCurrentMonth = computed(() => {
+  const now = new Date()
+  return (
+    selectedMonth.value.getFullYear() === now.getFullYear() &&
+    selectedMonth.value.getMonth() === now.getMonth()
+  )
+})
+
+function prevMonth() {
+  const d = new Date(selectedMonth.value)
+  d.setMonth(d.getMonth() - 1)
+  selectedMonth.value = d
+}
+
+function nextMonth() {
+  const d = new Date(selectedMonth.value)
+  d.setMonth(d.getMonth() + 1)
+  selectedMonth.value = d
+}
+
+// Filtra spese per mese selezionato
+const filteredExpenses = computed(() =>
+  store.expenses.filter(e => {
+    if (!e.created_at) return false
+    const d = new Date(e.created_at)
+    return (
+      d.getFullYear() === selectedMonth.value.getFullYear() &&
+      d.getMonth() === selectedMonth.value.getMonth()
+    )
+  })
+)
+
 onMounted(async () => {
   const { data } = await supabase.auth.getUser()
   currentUser.value = data.user?.email || ''
@@ -120,7 +168,7 @@ onMounted(async () => {
 })
 
 const balance = computed(() =>
-  calculateBalance(store.expenses)
+  calculateBalance(filteredExpenses.value)
 )
 
 const message = computed(() =>
@@ -128,7 +176,7 @@ const message = computed(() =>
 )
 
 const report = computed(() =>
-  buildUserReport(store.expenses, currentUser.value)
+  buildUserReport(filteredExpenses.value, currentUser.value)
 )
 
 // PDF

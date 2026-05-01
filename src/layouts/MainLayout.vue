@@ -17,6 +17,14 @@
           Money App
         </q-toolbar-title>
 
+        <q-avatar
+          size="34px"
+          :style="{ background: avatarColor, cursor: 'default' }"
+          class="text-white text-weight-bold avatar-header"
+        >
+          {{ userInitial }}
+        </q-avatar>
+
       </q-toolbar>
     </q-header>
 
@@ -149,6 +157,23 @@ const leftDrawerOpen = ref(false)
 const router = useRouter()
 const darkMode = ref(false)
 const themeDialog = ref(false)
+const currentUserEmail = ref('')
+
+const userInitial = computed(() => {
+  const email = currentUserEmail.value
+  if (!email) return '?'
+  return email.charAt(0).toUpperCase()
+})
+
+// Genera un colore stabile dall'email
+const avatarColor = computed(() => {
+  const colors = ['#1976D2','#7B1FA2','#C2185B','#388E3C','#00796B','#E64A19','#0097A7','#3F51B5']
+  const email = currentUserEmail.value
+  if (!email) return colors[0]
+  let hash = 0
+  for (let i = 0; i < email.length; i++) hash = email.charCodeAt(i) + ((hash << 5) - hash)
+  return colors[Math.abs(hash) % colors.length]
+})
 
 const palette = [
   { label: 'Blu',       value: '#1976D2' },
@@ -184,7 +209,7 @@ function selectColor(color: string) {
   themeDialog.value = false
 }
 
-onMounted(() => {
+onMounted(async () => {
   const savedDark = localStorage.getItem('darkMode')
   if (savedDark !== null) {
     darkMode.value = savedDark === 'true'
@@ -196,6 +221,9 @@ onMounted(() => {
     currentColor.value = savedColor
     setCssVar('primary', savedColor)
   }
+
+  const { data } = await supabase.auth.getUser()
+  currentUserEmail.value = data.user?.email ?? ''
 })
 
 async function logout() {
@@ -210,6 +238,13 @@ async function logout() {
   height: 18px;
   border-radius: 50%;
   border: 2px solid rgba(0,0,0,0.15);
+}
+
+.avatar-header {
+  font-size: 15px;
+  letter-spacing: 0.03em;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  flex-shrink: 0;
 }
 
 .palette-dot {
