@@ -14,7 +14,7 @@
         />
 
         <q-toolbar-title>
-          Money App
+          Spese
         </q-toolbar-title>
 
         <q-avatar
@@ -210,24 +210,18 @@ function selectColor(color: string) {
 }
 
 onMounted(async () => {
-  const savedDark = localStorage.getItem('darkMode')
-  if (savedDark !== null) {
-    darkMode.value = savedDark === 'true'
-    $q.dark.set(darkMode.value)
-  }
-
-  const savedColor = localStorage.getItem('themeColor')
-  if (savedColor) {
-    currentColor.value = savedColor
-    setCssVar('primary', savedColor)
-  }
-
   const { data } = await supabase.auth.getUser()
   currentUserEmail.value = data.user?.email ?? ''
+
+  // 🔥 LISTENER REATTIVO
+  supabase.auth.onAuthStateChange((event, session) => {
+    currentUserEmail.value = session?.user?.email ?? ''
+  })
 })
 
 async function logout() {
   await supabase.auth.signOut()
+  currentUserEmail.value = '' 
   await router.push('/login')
 }
 </script>

@@ -153,11 +153,19 @@ function nextMonth() {
 const filteredExpenses = computed(() =>
   store.expenses.filter(e => {
     if (!e.created_at) return false
+
     const d = new Date(e.created_at)
-    return (
+    const isSameMonth =
       d.getFullYear() === selectedMonth.value.getFullYear() &&
       d.getMonth() === selectedMonth.value.getMonth()
-    )
+
+    if (!isSameMonth) return false
+
+    // Mostra tutte le spese condivise (anche di altri utenti del gruppo)
+    if (e.type === 'shared') return true
+
+    // Mostra solo le spese personali dell'utente loggato
+    return e.type === 'personal' && e.paidBy === currentUser.value
   })
 )
 
@@ -215,15 +223,23 @@ function generatePDF() {
 
     group.expenses.forEach(e => {
       const typeLabel = e.type === 'shared' ? '(C)' : '(P)'
+
+      // 🔥 FIX QUI
+      const value =
+        e.type === 'shared'
+          ? e.amount / 2
+          : e.amount
+
       doc.text(`• ${e.name} ${typeLabel}`, 25, y)
-      doc.text(`€${e.amount}`, 180, y, { align: 'right' })
+      doc.text(`€${value.toFixed(2)}`, 180, y, { align: 'right' })
+
       y += 6
     })
 
     y += 2
 
     doc.setTextColor(100)
-    doc.text(`Totale categoria: €${group.total}`, 180, y, { align: 'right' })
+    doc.text(`Totale categoria: €${group.total.toFixed(2)}`, 180, y, { align: 'right' })
 
     y += 10
     doc.setTextColor(0)
@@ -234,7 +250,7 @@ function generatePDF() {
   y += 10
 
   doc.setFontSize(14)
-  doc.text(`Totale generale: €${report.value.total}`, 180, y, { align: 'right' })
+  doc.text(`Totale generale: €${report.value.total.toFixed(2)}`, 180, y, { align: 'right' })
 
   doc.save(`report-${currentUser.value}.pdf`)
 }
