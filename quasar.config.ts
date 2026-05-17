@@ -32,6 +32,7 @@ export default defineConfig((/* ctx */) => {
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#build
     build: {
+      productName: 'Flowly',
       target: {
         browser: 'baseline-widely-available',
         node: 'node22',

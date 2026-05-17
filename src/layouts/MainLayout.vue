@@ -210,18 +210,31 @@ function selectColor(color: string) {
 }
 
 onMounted(async () => {
+  // 🔥 RESTORE dark mode
+  const savedDark = localStorage.getItem('darkMode')
+  if (savedDark === 'true') {
+    darkMode.value = true
+    $q.dark.set(true)
+  }
+
+  // 🔥 RESTORE colore tema
+  const savedColor = localStorage.getItem('themeColor')
+  if (savedColor) {
+    currentColor.value = savedColor
+    setCssVar('primary', savedColor)
+  }
+
+  // utente
   const { data } = await supabase.auth.getUser()
   currentUserEmail.value = data.user?.email ?? ''
 
-  // 🔥 LISTENER REATTIVO
   supabase.auth.onAuthStateChange((event, session) => {
     currentUserEmail.value = session?.user?.email ?? ''
   })
 })
-
 async function logout() {
   await supabase.auth.signOut()
-  currentUserEmail.value = '' 
+  currentUserEmail.value = ''
   await router.push('/login')
 }
 </script>

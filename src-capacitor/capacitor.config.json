@@ -1,0 +1,10 @@
+{
+  "appId": "com.danilo.moneyapp",
+  "appName": "Flowli",
+  "webDir": "www",
+  "plugins": {
+    "StatusBar": {
+      "overlay": true
+    }
+  }
+}

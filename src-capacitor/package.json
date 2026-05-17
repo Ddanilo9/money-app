@@ -1,0 +1,13 @@
+{
+  "name": "money-app",
+  "version": "0.0.1",
+  "description": "Finance tracking app for shared expenses",
+  "author": "Danilo",
+  "private": true,
+  "dependencies": {
+    "@capacitor/android": "^8.3.1",
+    "@capacitor/app": "^8.0.0",
+    "@capacitor/cli": "^8.0.0",
+    "@capacitor/core": "^8.0.0"
+  }
+}

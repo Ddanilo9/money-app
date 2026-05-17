@@ -1,6 +1,7 @@
+import { syncSheet } from 'src/lib/sheetSync'
 import { supabase } from 'src/lib/supabase'
 
-const BASE_URL = 'http://localhost:3000'
+const BASE_URL = 'https://money-app-backend-danilo.fly.dev'
 
 // 🔐 helper token
 async function getAuthHeader() {
@@ -33,21 +34,18 @@ export async function getExpenses() {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function addExpense(expense: any) {
   const headers = await getAuthHeader()
-
-  console.log('📤 ADD PAYLOAD:', expense)
+  const { data: { user } } = await supabase.auth.getUser()
 
   const res = await fetch(`${BASE_URL}/expenses`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...headers
-    },
+    headers: { 'Content-Type': 'application/json', ...headers },
     body: JSON.stringify(expense)
   })
-
   const data = await res.json()
 
-  console.log('📥 ADD RESPONSE:', data)
+  // sync sheet
+  const allExpenses = await getExpenses()
+  syncSheet(allExpenses, user?.email ?? '')
 
   return data
 }
@@ -56,21 +54,18 @@ export async function addExpense(expense: any) {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function updateExpense(expense: any) {
   const headers = await getAuthHeader()
-
-  console.log('📤 UPDATE PAYLOAD:', expense)
+  const { data: { user } } = await supabase.auth.getUser()
 
   const res = await fetch(`${BASE_URL}/expenses/${expense.id}`, {
     method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      ...headers
-    },
+    headers: { 'Content-Type': 'application/json', ...headers },
     body: JSON.stringify(expense)
   })
-
   const data = await res.json()
 
-  console.log('📥 UPDATE RESPONSE:', data)
+  // sync sheet
+  const allExpenses = await getExpenses()
+  syncSheet(allExpenses, user?.email ?? '')
 
   return data
 }

@@ -1,1 +1,4 @@
 // app global css
+.q-header {
+  padding-top: env(safe-area-inset-top);
+}
