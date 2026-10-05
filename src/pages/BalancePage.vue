@@ -62,8 +62,15 @@
           </div>
 
           <div class="text-weight-bold">
-            €{{ group.total }}
-          </div>
+  €{{
+    group.expenses
+      .reduce((sum, e) =>
+        sum + (e.type === 'shared'
+          ? e.amount / 2
+          : e.amount), 0)
+      .toFixed(2)
+  }}
+</div>
 
         </div>
 
@@ -80,8 +87,13 @@
           <div class="row items-center">
 
             <div class="text-caption q-mr-sm">
-              €{{ e.amount }}
-            </div>
+  €{{
+    (e.type === 'shared'
+      ? e.amount / 2
+      : e.amount
+    ).toFixed(2)
+  }}
+</div>
 
             <q-badge
               :color="e.type === 'shared' ? 'primary' : 'blue-grey-4'"
@@ -99,8 +111,16 @@
 
       <!-- TOTALE -->
       <div class="text-right text-weight-medium q-mt-md">
-        Totale: €{{ report.total }}
-      </div>
+  Totale: €{{
+    report.groups
+      .reduce((total, group) =>
+        total + group.expenses.reduce((sum, e) =>
+          sum + (e.type === 'shared'
+            ? e.amount / 2
+            : e.amount), 0), 0)
+      .toFixed(2)
+  }}
+</div>
 
     </div>
 
