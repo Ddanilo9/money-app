@@ -192,6 +192,8 @@ function generatePDF() {
   const doc = new jsPDF()
 
   let y = 15
+  const pageHeight = doc.internal.pageSize.getHeight()
+  const pageLimit = pageHeight - 20
 
   const month = new Date().toLocaleString('it-IT', {
     month: 'long',
@@ -214,6 +216,12 @@ function generatePDF() {
   y += 10
 
   report.value.groups.forEach(group => {
+    // Controlla se la categoria entra nella pagina
+    if (y + 10 > pageLimit) {
+      doc.addPage()
+      y = 15
+    }
+
     doc.setFontSize(13)
     doc.text(group.category.toUpperCase(), 20, y)
 
@@ -222,6 +230,12 @@ function generatePDF() {
     doc.setFontSize(11)
 
     group.expenses.forEach(e => {
+      // Controlla se la riga entra nella pagina
+      if (y + 6 > pageLimit) {
+        doc.addPage()
+        y = 15
+      }
+
       const typeLabel = e.type === 'shared' ? '(C)' : '(P)'
 
       // 🔥 FIX QUI
@@ -244,6 +258,12 @@ function generatePDF() {
     y += 10
     doc.setTextColor(0)
   })
+
+  // Controlla prima di aggiungere il totale finale
+  if (y + 15 > pageLimit) {
+    doc.addPage()
+    y = 15
+  }
 
   doc.line(20, y, 190, y)
 
